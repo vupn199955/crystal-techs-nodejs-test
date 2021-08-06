@@ -5,7 +5,7 @@
   "engines": {
     "node": "14.x"
   },
-  "main": "index.js",
+  "main": "dist/app.js",
   "scripts": {
     "start": "SET NODE_PATH=./dist & node dist/app.js",
     "dev": "SET NODE_ENV=dev & nodemon -r tsconfig-paths/register src/app.ts",

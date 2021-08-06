@@ -1,7 +1,7 @@
 import { Router, Request, Response } from "express";
-import { WeatherService } from "services/weather";
+import { WeatherService } from "../services/weather";
 import { IndegoService } from '../services/indego';
-import { PostgreSqlService } from "services/postgresql";
+import { PostgreSqlService } from "../services/postgresql";
 import moment from 'moment';
 import * as _ from 'lodash';
 

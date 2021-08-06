@@ -1,5 +1,6 @@
 ## API Documentation
 - /api/v1/stations/fetch?at={datetime}
+    To create an record into database
     Query params:
     - at: Datetime, optional
 - /api/v1/stations?at={datetime}

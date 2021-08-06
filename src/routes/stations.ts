@@ -14,17 +14,17 @@ const postgreSqlService = new PostgreSqlService();
 router.get("/fetch", async (req: Request, res: Response) => {
   const { at } = req.query as any
   const dateAt = at && new Date(at);
-  const timeAt = moment(dateAt).utc().valueOf();
+  const timeAt = moment(dateAt).utc().toString();
   try {
     const stationRes = await indegoService.getStations();
     if (stationRes.status === 200) {
-      await postgreSqlService.recordStations(
+      const data = await postgreSqlService.recordStations(
         timeAt,
         JSON.stringify(stationRes.data.features),
       );
       res.status(stationRes.status).json({
         at: timeAt,
-        stations: stationRes.data.features,
+        stations: data,
       });
     } else {
       res.status(stationRes.status).json(stationRes.data);
@@ -40,9 +40,9 @@ router.get("/", async (req: Request, res: Response) => {
     res.status(404).send();
     return;
   }
-  const timeAt = moment.utc(new Date(at)).valueOf();
+  const timeAt = moment.utc(new Date(at)).toString();
   try {
-    const data = await postgreSqlService.getStationsNearestTime(timeAt as number);
+    const data = await postgreSqlService.getStationsNearestTime(timeAt);
 
     if (!data.rows.length) {
       res.status(404).send();
@@ -80,15 +80,19 @@ router.get("/:kioskId", async (req: Request, res: Response) => {
     res.status(404).send();
     return;
   }
-  const timeAt = moment(new Date(at)).utc().valueOf();
-  const timeTo = to && moment(new Date(to)).utc().valueOf();
+  const timeAt = moment(new Date(at)).utc().format('yyyy-MM-DD');
+  const timeTo = to && moment(new Date(to)).format('yyyy-MM-DD');
   const kioskId = req.params.kioskId;
   try {
     let request;
     if (!timeTo) {
-      request = postgreSqlService.getStationsNearestTime(timeAt as number);
+      request = postgreSqlService.getStationsNearestTime(timeAt);
     } else {
-      request = postgreSqlService.getStationsBetweenTime(timeAt + '', timeTo);
+      if (frequency === 'hourly') {
+        request = postgreSqlService.getStationsBetweenTime(timeAt, timeTo);
+      } else {
+        request = postgreSqlService.getStationsBetweenTimeDaily(timeAt, timeTo);
+      }
     }
     const weatherReq = weatherService.getWeatherOfPhiladelphia();
     const [ stationsRes, weatherRes ] = await Promise.all([
@@ -106,7 +110,6 @@ router.get("/:kioskId", async (req: Request, res: Response) => {
       const kiosk = _.find(_data, ({ properties: { id }}) => (id == kioskId));
       return kiosk;
     })
-
     if (weatherRes.status === 200) {
       res.status(weatherRes.status).json({
         station: _stations,
